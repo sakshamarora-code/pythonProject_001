@@ -28,10 +28,10 @@ df = load_data()
 
 # -------------------- UI HEADER --------------------
 st.title("🎓 Student Management System")
-st.caption("CSV-based UI application built using Python & Streamlit")
+st.caption("CSV-based UI application using Python & Streamlit")
 
-# -------------------- ADD / UPDATE --------------------
-st.subheader("➕ Add / Update Student")
+# -------------------- ADD STUDENT (APPEND ONLY) --------------------
+st.subheader("➕ Add Student")
 
 with st.form("student_form"):
     c1, c2, c3 = st.columns(3)
@@ -43,16 +43,16 @@ with st.form("student_form"):
     batch = c1.text_input("Batch")
     admit_date = c2.text_input("Admit Date")
     mobile = c3.text_input("Mobile")
-
     parent_mobile = c1.text_input("Parent Mobile")
 
-    submit = st.form_submit_button("Save / Update")
+    submit = st.form_submit_button("Add Student")
 
     if submit:
         if name.strip() == "":
             st.error("Student name is required")
+        elif sl in df["sl"].values:
+            st.error("Serial number already exists. Records cannot be updated.")
         else:
-            df = df[df["sl"] != sl]  # overwrite if exists
             new_row = pd.DataFrame([{
                 "sl": sl,
                 "name": name,
@@ -64,7 +64,7 @@ with st.form("student_form"):
             }])
             df = pd.concat([df, new_row], ignore_index=True)
             save_data(df)
-            st.success("Student record saved successfully")
+            st.success("Student record added successfully")
 
 # -------------------- FILTER & SORT --------------------
 st.subheader("🔍 Filter & Sort")
@@ -111,9 +111,12 @@ st.subheader("🗑️ Delete Student")
 del_sl = st.number_input("Enter Serial No to Delete", min_value=1, step=1)
 
 if st.button("Delete Record"):
-    df = df[df["sl"] != del_sl]
-    save_data(df)
-    st.warning("Student record deleted")
+    if del_sl not in df["sl"].values:
+        st.error("Serial number not found")
+    else:
+        df = df[df["sl"] != del_sl]
+        save_data(df)
+        st.warning("Student record deleted")
 
 # -------------------- CHARTS --------------------
 st.subheader("📊 Analytics")
